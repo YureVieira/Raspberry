@@ -55,6 +55,13 @@ void direita()
 	digitalWrite (2, HIGH);
 	digitalWrite (3, LOW);
 }
+void parar()
+{
+	digitalWrite (0, LOW);
+	digitalWrite (1, LOW);
+	digitalWrite (2, LOW);
+	digitalWrite (3, LOW);
+}
 int main()
 {
 	/*********************************
@@ -242,17 +249,20 @@ int main()
 				line(frame,approx[1],approx[2],Scalar(255,100,0),1,1);
 				line(frame,approx[2],approx[3],Scalar(255,100,0),1,1);
 				line(frame,approx[3],approx[0],Scalar(255,100,0),1,1);
-
-                x_diff = (int)center.x - cursor.x;
-                y_diff = (int)center.y - cursor.y;
-                std::stringstream result_x,result_y;
-                result_x << x_diff;
-                result_y << y_diff;
-				putText(frame,"X: "+result_x.str(),Point(center.x,center.y+10),FONT_HERSHEY_SIMPLEX,0.3,Scalar(50,100,20),1);
-				putText(frame,"Y: "+result_y.str(),Point(center.x,center.y+30),FONT_HERSHEY_SIMPLEX,0.3,Scalar(50,100,20),1);
-				cout<<"X: "<< x_diff << endl;
-				cout<<"Y: "<< y_diff << endl;
-				cout<<"Area: "<< fabs(contourArea(Mat(approx))) << endl;
+				/*************************************************************************************************************/
+//                x_diff = (int)center.x - cursor.x;
+//                y_diff = (int)center.y - cursor.y;
+//                std::stringstream result_x,result_y;
+//                result_x << x_diff;
+//                result_y << y_diff;
+//				putText(frame,"X: "+result_x.str(),Point(center.x,center.y+10),FONT_HERSHEY_SIMPLEX,0.3,Scalar(50,100,20),1);
+//				putText(frame,"Y: "+result_y.str(),Point(center.x,center.y+30),FONT_HERSHEY_SIMPLEX,0.3,Scalar(50,100,20),1);
+//				cout<<"X: "<< x_diff << endl;
+//				cout<<"Y: "<< y_diff << endl;
+//				cout<<"Area: "<< fabs(contourArea(Mat(approx))) << endl;
+				if(fabs(contourArea(Mat(approx))) < 7000)frente();
+				else parar();
+				/*************************************************************************************************************/
 				/**********************************
 				Corrige pespectiva da imagem
 				contida entre os pontos
