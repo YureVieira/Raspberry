@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1411254148 source:/home/yure/Documentos/projetos_CodeBlocks/vision3/main.cpp
+	"opencv2/opencv.hpp"
+	<iostream>
+	<math.h>
+	<string.h>
+
+1417960330 source:/home/pi/Projetos_CodeBlocks/vision3/main.cpp
+	"opencv2/opencv.hpp"
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<wiringPi.h>
+	<wiringSerial.h>
+
