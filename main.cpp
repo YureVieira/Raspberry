@@ -6,7 +6,10 @@
 #include <wiringPi.h>
 #include <wiringSerial.h>
 #define borda 1
-
+#define A1 0
+#define A2 1
+#define B1 2
+#define B2 3
 
 using namespace std;
 using namespace cv;
@@ -28,39 +31,39 @@ void WritePkg(char d1,char d2)
 }
 void frente()
 {
-	digitalWrite (0, HIGH);
-	digitalWrite (1, LOW);
-	digitalWrite (2, LOW);
-	digitalWrite (3, HIGH);
+	digitalWrite (A1, HIGH);
+	digitalWrite (A2, LOW);
+	digitalWrite (B1, LOW);
+	digitalWrite (B2, HIGH);
 }
 
 void re()
 {
-	digitalWrite (0, LOW);
-	digitalWrite (1, HIGH);
-	digitalWrite (2, HIGH);
-	digitalWrite (3, LOW);
+	digitalWrite (A1, LOW);
+	digitalWrite (A2, HIGH);
+	digitalWrite (B1, HIGH);
+	digitalWrite (B2, LOW);
 }
 void esquerda()
 {
-	digitalWrite (0, LOW);
-	digitalWrite (1, HIGH);
-	digitalWrite (2, LOW);
-	digitalWrite (3, HIGH);
+	digitalWrite (A1, LOW);
+	digitalWrite (A2, HIGH);
+	digitalWrite (B1, LOW);
+	digitalWrite (B2, HIGH);
 }
 void direita()
 {
-	digitalWrite (0, HIGH);
-	digitalWrite (1, LOW);
-	digitalWrite (2, HIGH);
-	digitalWrite (3, LOW);
+	digitalWrite (A1, HIGH);
+	digitalWrite (A2, LOW);
+	digitalWrite (B1, HIGH);
+	digitalWrite (B2, LOW);
 }
 void parar()
 {
-	digitalWrite (0, LOW);
-	digitalWrite (1, LOW);
-	digitalWrite (2, LOW);
-	digitalWrite (3, LOW);
+	digitalWrite (A1, LOW);
+	digitalWrite (A2, LOW);
+	digitalWrite (B1, LOW);
+	digitalWrite (B2, LOW);
 }
 int main()
 {
@@ -68,10 +71,10 @@ int main()
 	Configuração gpio
 	**********************************/
 	wiringPiSetup () ;
-	pinMode (0, OUTPUT) ;
-	pinMode (1, OUTPUT) ;
-	pinMode (2, OUTPUT) ;
-	pinMode (3, OUTPUT) ;
+	pinMode (A1, OUTPUT) ;
+	pinMode (A2, OUTPUT) ;
+	pinMode (B1, OUTPUT) ;
+	pinMode (B2, OUTPUT) ;
 	/*********************************/
 	SerialPort = serialOpen(dev2,baud_rate);
 	/*********************************/
@@ -405,6 +408,11 @@ int main()
 
 		//int key = waitKey(10);
 		if(key == (int)'q') break;
+		else if(key == (int)'w') frente();
+		else if(key == (int)'s') re();
+		else if(key == (int)'d') direita();
+		else if(key == (int)'a') esquerda();
+		else parar();
 	}
 //	serialClose(device);
 	destroyAllWindows();
