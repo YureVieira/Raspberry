@@ -17,9 +17,11 @@ using namespace cv;
 //int thresh = 50, N = 11;
 int x_diff,y_diff;
 int v1=20,v2=90,N=11;
+
 const int baud_rate = 9600;
-int SerialPort;
+int device;
 char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyACM0";
+
 void WritePkg(char d1,char d2)
 {
     char data[4];
@@ -27,7 +29,7 @@ void WritePkg(char d1,char d2)
     data[3]=0xF2;
     data[1]=d1;
     data[2]=d2;
-    serialPuts(SerialPort,data);
+    serialPuts(device,data);
 }
 void frente()
 {
@@ -76,7 +78,7 @@ int main()
 	pinMode (B1, OUTPUT) ;
 	pinMode (B2, OUTPUT) ;
 	/*********************************/
-	SerialPort = serialOpen(dev2,baud_rate);
+	device = serialOpen(dev2,baud_rate);
 	/*********************************/
 	char command = 0;
 	//int device=serialOpen(dev1, baud_rate);
@@ -147,8 +149,8 @@ int main()
 	cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
 	cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
 	Point cursor;
-	cursor.y=cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-	cursor.x=cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
+	//cursor.y=cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
+	//cursor.x=cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
 
 	namedWindow("window",1);
 
@@ -161,6 +163,10 @@ int main()
 	{
 		int key = waitKey(10);
 		cap >> frame;//capture um frame
+		transpose(frame,frame);
+		flip(frame,frame,1);
+		cursor.y = frame.rows/2;
+		cursor.x=frame.cols/2;
 		//GaussianBlur(frame, frame, Size(5, 5), 2, 2 );//aplique um filtro
 		Mat img_canny(frame.size(), CV_8U);//nova matriz
 		cvtColor(frame,img_gray,CV_BGR2GRAY);//passe a imagem para tons de cinza
@@ -246,24 +252,27 @@ int main()
 				circle(frame,approx[3],2,Scalar(0,0,0),1,1);
 				circle(frame,center,2,Scalar(0,0,0),-1,1);
 
-				line(frame,cursor,center,Scalar(250,20,200),4,1);
+				line(frame,cursor,center,Scalar(250,20,200),2,1);
 
 				line(frame,approx[0],approx[1],Scalar(255,100,0),1,1);
 				line(frame,approx[1],approx[2],Scalar(255,100,0),1,1);
 				line(frame,approx[2],approx[3],Scalar(255,100,0),1,1);
 				line(frame,approx[3],approx[0],Scalar(255,100,0),1,1);
 				/*************************************************************************************************************/
-//                x_diff = (int)center.x - cursor.x;
-//                y_diff = (int)center.y - cursor.y;
-//                std::stringstream result_x,result_y;
-//                result_x << x_diff;
-//                result_y << y_diff;
-//				putText(frame,"X: "+result_x.str(),Point(center.x,center.y+10),FONT_HERSHEY_SIMPLEX,0.3,Scalar(50,100,20),1);
-//				putText(frame,"Y: "+result_y.str(),Point(center.x,center.y+30),FONT_HERSHEY_SIMPLEX,0.3,Scalar(50,100,20),1);
-//				cout<<"X: "<< x_diff << endl;
-//				cout<<"Y: "<< y_diff << endl;
-//				cout<<"Area: "<< fabs(contourArea(Mat(approx))) << endl;
-				if(fabs(contourArea(Mat(approx))) < 7000)frente();
+                x_diff = (int)center.x - cursor.x;
+                y_diff = (int)center.y - cursor.y;
+                std::stringstream result_x,result_y;
+                result_x << x_diff;
+                result_y << y_diff;
+				putText(frame,"X: "+result_x.str(),Point(center.x,center.y+10),FONT_HERSHEY_SIMPLEX,0.3,Scalar(250,100,220),1);
+				putText(frame,"Y: "+result_y.str(),Point(center.x,center.y+30),FONT_HERSHEY_SIMPLEX,0.3,Scalar(250,100,220),1);
+				//cout<<"X: "<< x_diff << endl;
+				//cout<<"Y: "<< y_diff << endl;
+				//cout<<"Area: "<< fabs(contourArea(Mat(approx))) << endl;
+				//if(fabs(contourArea(Mat(approx))) < 7000)frente();
+				//else if (y_dif >= 5) direita();
+				if (x_diff >= 8) direita();
+				else if (x_diff <= -8) esquerda();
 				else parar();
 				/*************************************************************************************************************/
 				/**********************************
@@ -298,28 +307,28 @@ int main()
 				um quadrilatero
 				**********************************/
 				//int key = waitKey(10);
-				if(key == (int)'a')
+				if(key == (int)'h')
 				{
 					flag_compara_imagens = true;
 					img_model[0] = img_resize;
 					cout<<"Gravado (esquerda)"<<endl;
 					imwrite("Esquerda.jpg",img_model[0],compression_param);
 				}
-				if(key == (int)'d')
+				if(key == (int)'k')
 				{
 					flag_compara_imagens = true;
 					img_model[1] = img_resize;
 					cout<<"Gravado (direita)"<<endl;
 					imwrite("Direita.jpg",img_model[1],compression_param);
 				}
-				if(key == (int)'w')
+				if(key == (int)'u')
 				{
 					flag_compara_imagens = true;
 					img_model[2] = img_resize;
 					cout<<"Gravado (em frente)"<<endl;
 					imwrite("Frente.jpg",img_model[2],compression_param);
 				}
-				if(key == (int)'s')
+				if(key == (int)'j')
 				{
 					flag_compara_imagens = true;
 					img_model[3] = img_resize;
@@ -362,7 +371,7 @@ int main()
 						{
 							cout<<"Direita"<<endl;
 							putText(frame,"Direita",Point(0,60),FONT_HERSHEY_SIMPLEX,0.5,Scalar(100,255,80),2);
-							//serialPutchar(device,'R');
+							serialPutchar(device,'R');
 							direita();
 							command ='R';
 						}
@@ -370,7 +379,7 @@ int main()
 						{
 							cout<<"Frente"<<endl;
 							putText(frame,"Frente",Point(0,80),FONT_HERSHEY_SIMPLEX,0.5,Scalar(100,255,80),2);
-							//serialPutchar(device,'F');
+							serialPutchar(device,'F');
 							frente();
 							command ='F';
 						}
@@ -378,7 +387,7 @@ int main()
 						{
 							cout<<"Retorno"<<endl;
 							putText(frame,"Retorno",Point(0,100),FONT_HERSHEY_SIMPLEX,0.5,Scalar(100,255,80),2);
-							//serialPutchar(device,'B');
+							serialPutchar(device,'B');
 							re();
 							command ='B';
 						}
@@ -403,7 +412,7 @@ int main()
 		/**********************************
 		Leitura do teclado
 		**********************************/
-		circle(frame,cursor,5,Scalar(125,250,110),4);
+		circle(frame,cursor,2,Scalar(125,250,110),2);
 		imshow( "window", frame );
 
 		//int key = waitKey(10);
@@ -414,9 +423,9 @@ int main()
 		else if(key == (int)'a') esquerda();
 		else parar();
 	}
-//	serialClose(device);
+	serialClose(device);
 	destroyAllWindows();
-	//	count << "Saindo" << endl;
+	cout << "Saindo" << endl;
 	return 0;
 }
 
