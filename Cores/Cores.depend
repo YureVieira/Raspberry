@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1422879620 source:/home/pi/Raspberry/Cores/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+

@@ -163,8 +163,8 @@ int main()
 	{
 		int key = waitKey(10);
 		cap >> frame;//capture um frame
-		transpose(frame,frame);
-		flip(frame,frame,1);
+		//transpose(frame,frame);
+		//flip(frame,frame,1);
 		cursor.y = frame.rows/2;
 		cursor.x=frame.cols/2;
 		//GaussianBlur(frame, frame, Size(5, 5), 2, 2 );//aplique um filtro

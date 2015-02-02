@@ -14,3 +14,12 @@
 	<wiringPi.h>
 	<wiringSerial.h>
 
+1421175208 source:/home/pi/Raspberry/Opencv/main.cpp
+	"opencv2/opencv.hpp"
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<wiringPi.h>
+	<wiringSerial.h>
+
