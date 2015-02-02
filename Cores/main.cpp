@@ -76,6 +76,7 @@ float pid::compute(float in)
       output = kp * error + Iterm;
     if(output > outMax) output = outMax;
     else if(output < outMin) output = outMin;
+    return output;
 }
 /******************************************************************************/
 /******************************************************************************/
@@ -238,9 +239,10 @@ int main()
         float radius;                                           ///Variavel auxiliar.
         minEnclosingCircle(approx,center,radius);           ///Acha o centro do blob.
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
-        circle( frame, center, (int)radius, cv::Scalar(5,5,255), 2);      ///Circulo que marca o blob.
+        circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
         float out = pid_x.compute(center.x);
-        cout<<"Input: "<<pid_x.input<<" / Erro: "<<pid_x.error<<" / Saida: "<<out<<endl;
+        //cout<<"Input: "<<pid_x.input<<" / Erro: "<<pid_x.error<<" / Saida: "<<out<<endl;
+        cout<<"Saida: "<<out<<endl;
         }
 
 
@@ -260,7 +262,9 @@ int main()
 #endif // _RASPI_
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
         circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
-        //imshow("result",result);
+        if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
+        else line(frame,center_screen,center,Scalar(0,0,255),2);
+        imshow("result",result);
         imshow( "window", frame );
 
         int key = waitKey(10);
