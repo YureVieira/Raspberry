@@ -81,6 +81,40 @@ float pid::compute(float in)
 /******************************************************************************/
 /******************************************************************************/
 /******************************************************************************/
+class plot
+{
+private:
+	int old_x;
+	int old_y;
+	int x;
+	int y;
+	int width;
+public:
+	void add_point(Mat& img,int x,const Scalar& color,int thickness);
+	void set_width(int y);
+
+};
+void plot::add_point(Mat& img,int x,const Scalar& color,int thickness)
+{
+	if(y>width)
+	{
+		y = 0;
+		old_y = 0;
+		img = Scalar(0, 0, 0);
+	}
+	line(img,Point(old_y,old_x),Point(y,x),color,thickness);
+	old_y = y;
+	old_x = x;
+	y++;
+}
+
+inline void plot::set_width(int y)
+{
+	width = y;
+}
+/******************************************************************************/
+/******************************************************************************/
+/******************************************************************************/
 union int2_tochar
 {
     short int _int;
@@ -124,12 +158,6 @@ void show_xy_color(Mat img,int x,int y)
 
 int main()
 {
-    color[0] = 103;         ///Azul
-    pid pid_x;
-    pid_x.kp = 1;
-    pid_x.ki = 0.3;
-    pid_x.set_limits(-255.0,255.0);
-    pid_x.setpoint = 160.0;
 #ifdef _RASPI_
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
@@ -139,7 +167,15 @@ int main()
 
     cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
     cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
+//    cap.set(CV_CAP_PROP_FRAME_HEIGHT,640);
+//    cap.set(CV_CAP_PROP_FRAME_WIDTH,480);
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
+        color[0] = 103;         ///Azul
+    pid pid_x;
+    pid_x.kp = 1;
+    pid_x.ki = 0.3;
+    pid_x.set_limits(-127.0,127.0);
+    pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
     //    cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);
 
@@ -147,6 +183,11 @@ int main()
     setMouseCallback("window", CallBackFunc, NULL);
 
     Mat frame,aux_hsv,result;
+
+    Mat img_plot(512,600,CV_8UC3);     ///Imagem para graficos de resposta do pid
+    plot graph;
+    graph.set_width(600);
+
     vector<Mat> HSV_chanells;
 
     vector<vector<Point> > contours;
@@ -241,8 +282,10 @@ int main()
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
         circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
         float out = pid_x.compute(center.x);
-        //cout<<"Input: "<<pid_x.input<<" / Erro: "<<pid_x.error<<" / Saida: "<<out<<endl;
-        cout<<"Saida: "<<out<<endl;
+        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out<<endl;
+        //cout<<"Saida: "<<out<<endl;
+        graph.add_point(img_plot,255-(int)out,Scalar(0,255,0),1);
+        imshow("PID",img_plot);     ///Exibe grafico da resposta PID
         }
 
 

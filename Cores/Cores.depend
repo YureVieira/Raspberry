@@ -7,7 +7,7 @@
 	<opencv.hpp>
 	<wiringSerial.h>
 
-1422896232 source:/home/yure/Raspberry/Cores/main.cpp
+1422992302 source:/home/yure/Raspberry/Cores/main.cpp
 	<iostream>
 	<sstream>
 	<math.h>
