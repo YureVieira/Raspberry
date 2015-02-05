@@ -64,19 +64,23 @@ int val_pwm=100;
 void setup(){
   Serial.begin(9600);
   carro.set_pins(2,3,10,11);
-  //pinMode(13,OUTPUT);
+  pinMode(13,OUTPUT);
 }
 void loop(){
   if(Serial.available())
   {
-    char data = Serial.read(); 
-    val_pwm = (int)data;   
-    val_pwm*=2;
+    byte data = Serial.read(); 
+    val_pwm =map(data,0,255,-255,255) ;
   }
   //digitalWrite(13,1);
-  if(val_pwm>=0)carro.move(right,val_pwm);
-  else carro.move(left,abs(val_pwm));
-  
+  if(val_pwm>0){
+    digitalWrite(13,1);
+    carro.move(right,val_pwm);
+  }
+  else {
+    digitalWrite(13,0);
+    carro.move(left,abs(val_pwm));
+  }
 //  delay(1000);
 //  digitalWrite(13,0);
 //  carro.move(stop);

@@ -286,6 +286,9 @@ int main()
         //cout<<"Saida: "<<out<<endl;
         graph.add_point(img_plot,255-(int)out,Scalar(0,255,0),1);
         imshow("PID",img_plot);     ///Exibe grafico da resposta PID
+        #ifdef _RASPI_
+        serialPutchar(device,(char)out);
+        #endif // _RASPI_
         }
 
 
