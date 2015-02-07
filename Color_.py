@@ -180,6 +180,13 @@ while True:
                 cv2.line(frame,center_screen,(cx,cy),(0,255,0),2);
             else:
                 cv2.line(frame,center_screen,(cx,cy),(0,0,255),2);
+        else:
+            out = 127
+            print int(out)
+            data = 'a'
+            data = chr(int(out))
+            ser.write(data)
+        
     cv2.circle(frame,(ix,iy),12,(0,255,0),3)
     #-------------------------------------------------------------------------------------#
     #Desenhos
@@ -196,5 +203,5 @@ while True:
     except:
         None
 cv2.destroyAllWindows()
-#exit(0)
+exit(0)
 
