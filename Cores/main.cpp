@@ -161,9 +161,18 @@ int main()
 #ifdef _RASPI_
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
-    VideoCapture cap(0);
-    if(!cap.isOpened()) // check if we succeeded
-        return 1;
+    VideoCapture cap;
+    for(int i=0; i<10; i++)
+    {
+        cap.open(i);
+        if (cap.isOpened()) break;
+    }
+
+    if (!cap.isOpened())
+    {
+        cerr<<"Error opening the camera"<<endl;
+        return -1;
+    }
 
     cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
     cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
@@ -174,7 +183,7 @@ int main()
     pid pid_x;
     pid_x.kp = 1;
     pid_x.ki = 0.3;
-    pid_x.set_limits(-127.0,127.0);
+    pid_x.set_limits(0.0,180.0);
     pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
     //    cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);

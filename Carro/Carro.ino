@@ -27,25 +27,25 @@ void car::set_pins(int a,int b,int pa,int pb){
 }
 /*================================================================================*/
 void car::move(direction dir,int pwm=0){
-  if(dir == left){
+  if(dir == front){
     digitalWrite(pin_a,0);
     digitalWrite(pin_b,1);
     analogWrite(pwm_a,pwm);
     analogWrite(pwm_b,255-pwm); 
   }
-  else if(dir == right){
+  else if(dir == back){
     digitalWrite(pin_a,1);
     digitalWrite(pin_b,0);
     analogWrite(pwm_a,255-pwm);
     analogWrite(pwm_b,pwm); 
   }
-  else if(dir == front){
+  else if(dir == right){
     digitalWrite(pin_a,1);
     digitalWrite(pin_b,1);
     analogWrite(pwm_a,255-pwm);
     analogWrite(pwm_b,255-pwm); 
   }
-  else if(dir == back){
+  else if(dir == left){
     digitalWrite(pin_a,0);
     digitalWrite(pin_b,0);
     analogWrite(pwm_b,pwm);
