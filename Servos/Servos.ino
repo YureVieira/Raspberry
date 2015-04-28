@@ -5,8 +5,8 @@ int servo_n=0;
 
 void setup(){
   Serial.begin(9600);
-  servo_x.attach(9); 
-  servo_y.attach(10); 
+  servo_x.attach(10); 
+  servo_y.attach(11); 
   servo_x.write(90);
   servo_y.write(110);
 }
