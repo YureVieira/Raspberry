@@ -206,6 +206,7 @@ int main()
     vector<vector<Point> > contours;
     vector<Point> approx;
 
+    bool obj_detected = false;
     for(;;)
     {
         cap >> frame;
@@ -215,7 +216,7 @@ int main()
 
         /********************************************************************************************************************************/
         ///Erosão
-        int erosion_size = 3;
+        int erosion_size = 5;
         Mat element = getStructuringElement( MORPH_ELLIPSE,
                                              Size( 2*erosion_size + 1, 2*erosion_size+1 ),
                                              Point( erosion_size, erosion_size ) );
@@ -294,13 +295,18 @@ int main()
         minEnclosingCircle(approx,center,radius);           ///Acha o centro do blob.
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
         circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
-        float out = pid_x.compute(center.x);
-        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out<<endl;
+
+        float out_x = pid_x.compute(center.x);
+        float out_y = pid_y.compute(center.y);
+        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
         //cout<<"Saida: "<<out<<endl;
-        graph.add_point(img_plot,255-(int)out,Scalar(0,255,0),1);
+        graph.add_point(img_plot,255-(int)out_x,Scalar(0,255,0),1);
         imshow("PID",img_plot);     ///Exibe grafico da resposta PID
         #ifdef _RASPI_
-        serialPutchar(device,(char)out);
+        serialPutchar(device,(char)200);
+        serialPutchar(device,(char)out_x);
+        serialPutchar(device,(char)201);
+        serialPutchar(device,(char)out_y);
         #endif // _RASPI_
         }
 

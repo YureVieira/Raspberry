@@ -131,9 +131,10 @@ void setup() {
   pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
 }
 
-byte data=0, count=0;
+byte data=0;
 bool obj_detected = false;
 float out=0;
+long time;
 
 void loop() {
   if (Serial.available()) {
@@ -141,12 +142,6 @@ void loop() {
 
     if (data == 200)servo_n = 1;                     //Seleçao para servox
     else if (data == 201)servo_n = 2;              //Seleçao para servoy
-    else if (data == 202) //Sinaliza que nao ha objetos viziveis
-    {
-      obj_detected = false;
-      count = 0;
-    }
-    else if (data == 203)obj_detected = true;  //Sinaliza que um objeto foi detectado
     else if (data <= 180)                                  //Alinha a camera
     {
       if (servo_n == 1)
@@ -155,11 +150,14 @@ void loop() {
         servo_y.write(140 - data);
     }
     
-  count++;
-  count = min(INTERACTIONS,count);
+    if(!obj_detected)//Pega uma amostra de tempo
+    {
+      time = millis();
+      obj_detected = true;
+    }
   }
   
-  if (count >= INTERACTIONS && obj_detected)//Alinhar carro
+  if (time+1000 >= millis())//Se passar um segundo, alinhar carro
   {
     out = pid_rodas.compute(servo_x.read());
     if(out<0)

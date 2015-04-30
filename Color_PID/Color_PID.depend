@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1430417875 source:/home/yure/Documentos/Pesssoal/Raspberry/Color_PID/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+
