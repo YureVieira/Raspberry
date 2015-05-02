@@ -1,7 +1,6 @@
 # depslib dependency file v1.0
-1421179307 source:/home/pi/Raspberry/vision_basic/main.cpp
+1430579086 source:/home/pi/Raspberry/vision_basic/main.cpp
 	"opencv2/opencv.hpp"
-	<raspicam/raspicam_cv.h>
 	<iostream>
 
 1423592275 source:/home/yure/Raspberry/vision_basic/main.cpp

@@ -16,7 +16,7 @@ int main ()
 
     if (!cap.isOpened())
     {
-        cerr<<"Error opening the camera"<<endl;
+        cerr<<"Error opening the camera!"<<endl;
         return -1;
     }
     //set camera param

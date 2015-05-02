@@ -26,7 +26,7 @@ short int error_x,error_y;
 
 const int baud_rate = 9600;
 int device;
-char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyACM0";
+char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyAMA0";
 /******************************************************************************/
 /******************************************************************************/
 /******************************************************************************/
@@ -77,40 +77,6 @@ float pid::compute(float in)
     if(output > outMax) output = outMax;
     else if(output < outMin) output = outMin;
     return output;
-}
-/******************************************************************************/
-/******************************************************************************/
-/******************************************************************************/
-class plot
-{
-private:
-	int old_x;
-	int old_y;
-	int x;
-	int y;
-	int width;
-public:
-	void add_point(Mat& img,int x,const Scalar& color,int thickness);
-	void set_width(int y);
-
-};
-void plot::add_point(Mat& img,int x,const Scalar& color,int thickness)
-{
-	if(y>width)
-	{
-		y = 0;
-		old_y = 0;
-		img = Scalar(0, 0, 0);
-	}
-	line(img,Point(old_y,old_x),Point(y,x),color,thickness);
-	old_y = y;
-	old_x = x;
-	y++;
-}
-
-inline void plot::set_width(int y)
-{
-	width = y;
 }
 /******************************************************************************/
 /******************************************************************************/
@@ -196,10 +162,6 @@ int main()
     setMouseCallback("window", CallBackFunc, NULL);
 
     Mat frame,aux_hsv,result;
-
-    Mat img_plot(512,600,CV_8UC3);     ///Imagem para graficos de resposta do pid
-    plot graph;
-    graph.set_width(600);
 
     vector<Mat> HSV_chanells;
 
@@ -298,10 +260,9 @@ int main()
 
         float out_x = pid_x.compute(center.x);
         float out_y = pid_y.compute(center.y);
-        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
+//        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
         //cout<<"Saida: "<<out<<endl;
-        graph.add_point(img_plot,255-(int)out_x,Scalar(0,255,0),1);
-        imshow("PID",img_plot);     ///Exibe grafico da resposta PID
+
         #ifdef _RASPI_
         serialPutchar(device,(char)200);
         serialPutchar(device,(char)out_x);
@@ -329,7 +290,7 @@ int main()
         circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
         if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
         else line(frame,center_screen,center,Scalar(0,0,255),2);
-        imshow("result",result);
+//        imshow("result",result);
         imshow( "window", frame );
 
         int key = waitKey(10);
