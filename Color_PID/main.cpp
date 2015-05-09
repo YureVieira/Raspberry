@@ -3,15 +3,16 @@
 #include <math.h>
 #include <string.h>
 #include <opencv.hpp>
-//#define _RASPI_
+#define _RASPI_
+//#define ERODE
 
 #ifdef _RASPI_
 #include <wiringSerial.h>
 #endif // _RASPI_
 
-#define FAIXA_H 5
+#define FAIXA_H 3
 #define FAIXA_S 25
-#define FAIXA_V 5
+#define FAIXA_V 3
 
 using namespace std;
 using namespace cv;
@@ -128,7 +129,7 @@ int main()
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
     VideoCapture cap;
-    for(int i=0; i<10; i++)
+    for(int i=0; i<2; i++)
     {
         cap.open(i);
         if (cap.isOpened()) break;
@@ -147,14 +148,16 @@ int main()
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
         color[0] = 103;         ///Azul
     pid pid_x,pid_y;
-    pid_x.kp = 1;
-    pid_x.ki = 0.3;
+    pid_x.kp = 0.09;
+    pid_x.ki = 0.03;
     pid_x.set_limits(0.0,180.0);
     pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    pid_y.kp = 1;
-    pid_y.ki = 0.3;
+    pid_x.output = 90;
+    pid_y.kp = 0.09;
+    pid_y.ki = 0.03;
     pid_y.set_limits(0.0,180.0);
     pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
+    pid_y.output = 110;
     //    cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);
 
@@ -172,13 +175,14 @@ int main()
     for(;;)
     {
         cap >> frame;
-        //GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
+        GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
         cvtColor(frame,aux_hsv,CV_BGR2HSV);
         aux_hsv.copyTo(image_HSV);
 
         /********************************************************************************************************************************/
+        #ifdef ERODE
         ///Erosão
-        int erosion_size = 5;
+        int erosion_size = 3;
         Mat element = getStructuringElement( MORPH_ELLIPSE,
                                              Size( 2*erosion_size + 1, 2*erosion_size+1 ),
                                              Point( erosion_size, erosion_size ) );
@@ -186,6 +190,7 @@ int main()
         //erode( result, result, element );
         erode( frame, frame, element );
         //dilate( frame, frame, element );
+        #endif
         /********************************************************************************************************************************/
 
         //Separa canais para verificar somente Matiz.
@@ -261,31 +266,14 @@ int main()
         float out_x = pid_x.compute(center.x);
         float out_y = pid_y.compute(center.y);
 //        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
-        //cout<<"Saida: "<<out<<endl;
-
+        cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
         #ifdef _RASPI_
-        serialPutchar(device,(char)200);
-        serialPutchar(device,(char)out_x);
-        serialPutchar(device,(char)201);
-        serialPutchar(device,(char)out_y);
+        serialPutchar(device,(unsigned char)200);
+        serialPutchar(device,(unsigned char)(int)out_x);
+        serialPutchar(device,(unsigned char)201);
+        serialPutchar(device,(unsigned char)(int)out_y);
         #endif // _RASPI_
         }
-
-
-
-#ifdef _RASPI_
-        /***********************************************************
-        Prepara e envia coordenas pela serial
-        ************************************************************/
-        error_x = (short)center_screen.x - (short)center.x;
-        error_y = (short)center_screen.y - (short)center.y;
-        info_x._int=error_x;
-        info_y._int=error_y;
-        char message[]= {'a',info_x._char[0],info_x._char[1],info_y._char[0],info_y._char[1],'z',0};
-        cout<<"X: "<<error_x<<",Y: "<<error_y<<endl;
-        for(int i=0; i<6; i++)message[6]+=message[i];
-        for(int i=0; i<7; i++)serialPutchar(device, message[i]);
-#endif // _RASPI_
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
         circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
         if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);

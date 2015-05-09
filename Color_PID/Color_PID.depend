@@ -7,3 +7,11 @@
 	<opencv.hpp>
 	<wiringSerial.h>
 
+1431002807 source:/home/pi/Raspberry/Color_PID/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+

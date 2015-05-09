@@ -99,7 +99,7 @@ center_screen = (int(capture.get(cv.CV_CAP_PROP_FRAME_WIDTH)/2),int(capture.get(
 #-----------------------------------------------------------------------------------------#
 #Configurações da porta serial
 # ser = serial.Serial(port="COM3",baudrate=9600)
-ser = serial.Serial('/dev/ttyACM0')
+ser = serial.Serial('/dev/ttyAMA0')
 # ser.open()
 ser.write(chr(202))
 print ser.portstr
@@ -142,7 +142,7 @@ while True:
     # ret,im2 = cv2.threshold(im2,min(255,color[1]+faixa_s),255,cv.CV_THRESH_TOZERO_INV)
     # ret,im2 = cv2.threshold(im2,max(0,color[1]-faixa_s),255,cv.CV_THRESH_TOZERO)
     # ret,im2 = cv2.threshold(im2,1,255,cv.CV_THRESH_BINARY)
-    cv2.imshow('Hue', im1)
+    #cv2.imshow('Hue', im1)
     # cv2.imshow('Sat', im2)
     #ret,result = cv2.threshold(im1,1,255,cv.CV_THRESH_BINARY)
     #--------------------------------------------------------------------------------------#
@@ -205,7 +205,7 @@ while True:
     #Desenhos
     cv2.circle(frame,center_screen,5,(10,255,50),3,2);        #Circulo qua marca o centro.
     #-------------------------------------------------------------------------------------#
-    cv2.imshow('back', image_back)
+    #cv2.imshow('back', image_back)
     cv2.imshow('frame', frame)
     key = cv2.waitKey(10)
     if(key == ord('q')):
