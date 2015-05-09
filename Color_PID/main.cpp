@@ -29,6 +29,10 @@ const int baud_rate = 9600;
 int device;
 char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyAMA0";
 /******************************************************************************/
+int map(int x, int in_min, int in_max, int out_min, int out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 /******************************************************************************/
 /******************************************************************************/
 class pid
@@ -243,7 +247,7 @@ int main()
         ***********************************************************/
         for( size_t i = 0; i < contours.size() ; i++ )
         {
-            if(fabs(contourArea(Mat(contours[i]))) > area_min /*&& fabs(contourArea(Mat(contours[i]))) < 10000*/)
+            if(fabs(contourArea(Mat(contours[i]))) >= area_min /*&& fabs(contourArea(Mat(contours[i]))) < 10000*/)
             {
                 blob_area = fabs(contourArea(Mat(contours[i])));
                 blob_index = i;
@@ -267,11 +271,14 @@ int main()
         float out_y = pid_y.compute(center.y);
 //        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
         cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
+        int target_dist = map(blob_area,300,3000,180,0);
         #ifdef _RASPI_
         serialPutchar(device,(unsigned char)200);
         serialPutchar(device,(unsigned char)(int)out_x);
         serialPutchar(device,(unsigned char)201);
         serialPutchar(device,(unsigned char)(int)out_y);
+        serialPutchar(device,(unsigned char)202);
+        serialPutchar(device,(unsigned char)target_dist);
         #endif // _RASPI_
         }
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
