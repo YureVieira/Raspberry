@@ -1,5 +1,7 @@
+
 #include <Servo.h>
 #define PIN_DEBUG A1
+ISR(TIM2_OVER_vect){}
 /*================================================================================*/
 enum direction {
   front,
@@ -150,22 +152,10 @@ void setup() {
   servo_x.write(90);
   servo_y.write(110);
   //Controlzador PID
-  pid_rodas.kp = 1;
-  pid_rodas.ki = 0.3;
-  pid_rodas.set_limits(-255.0, 255.0);
-  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
-  for(int i=0;i<256;i++)
-  {
-    carro.move(left,i);
-    delay(25);
-  }
-  delay(1000);
-  for(int i=0;i<256;i++)
-  {
-    carro.move(right,i);
-    delay(25);
-  }
-  carro.move(stop,0);
+//  pid_rodas.kp = 1;
+//  pid_rodas.ki = 0.3;
+//  pid_rodas.set_limits(-255.0, 255.0);
+//  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
 }
 
 byte _data=0;
@@ -194,9 +184,9 @@ void loop() {
 
   if (target)//Se passar um segundo, alinhar carro
   {
-    carro.moveR(front,aux);
-    carro.moveL(front,255-aux);
-    aux++;
+    target_dist = map(target_dist,0,180,0,255);
+    carro.moveR(front,target_dist);
+    carro.moveL(front,255-target_dist);
   }
   delay(10);
 
