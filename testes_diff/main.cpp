@@ -131,7 +131,7 @@ int main()
          ***********************************************************/
         int blob_index=0;
         int blob_area=0;
-        int area_min = 200;
+        int area_min = 100;
         /***********************************************************
          * Separa o maior blob para segmentação
         ***********************************************************/
@@ -148,6 +148,8 @@ int main()
         {
             //cout << "Área: "<< blob_area <<endl;
             approxPolyDP(contours[blob_index], approx, arcLength(Mat(contours[blob_index]), true)*0.02, true);
+            Rect boundRect = boundingRect( Mat(approx) );
+            rectangle( frame, boundRect.tl(), boundRect.br(), Scalar(126,200,100), 2, 8, 0 );
         /************************************************************
          * Extração do centro do blob
          ************************************************************/
@@ -157,7 +159,7 @@ int main()
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
         circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
 
-        cout <<"centro:("<< (int)center.x<<", "<<(int)center.y<<") / Area="<<blob_area<<endl;
+        cout <<"centro:("<< (int)center.x<<", "<<(int)center.y<<") / Area="<<blob_area<< " / Raio="<<radius<<endl;
         }
 
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
