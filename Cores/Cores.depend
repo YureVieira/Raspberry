@@ -15,3 +15,11 @@
 	<opencv.hpp>
 	<wiringSerial.h>
 
+1432058205 source:/home/micro/Documentos/Raspberry/Cores/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+

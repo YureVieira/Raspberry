@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1432057404 source:/home/micro/Projetos_codeblocks/testes_diff/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+

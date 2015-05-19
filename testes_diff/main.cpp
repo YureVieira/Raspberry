@@ -3,16 +3,11 @@
 #include <math.h>
 #include <string.h>
 #include <opencv.hpp>
-//#define _RASPI_
-//#define ERODE
+#define ERODE
 
-#ifdef _RASPI_
-#include <wiringSerial.h>
-#endif // _RASPI_
-
-#define FAIXA_H 3
-#define FAIXA_S 25
-#define FAIXA_V 3
+int FAIXA_H =5;
+int FAIXA_S =25;
+int FAIXA_V =42;
 
 using namespace std;
 using namespace cv;
@@ -23,74 +18,6 @@ int v1=20,v2=90,N=11;
 Vec3b color;
 Point center_screen;
 Point2f center;                                     ///Variavel que recebe o centro do blob.
-short int error_x,error_y;
-
-const int baud_rate = 9600;
-int device;
-char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyAMA0";
-/******************************************************************************/
-int _map(int x, int in_min, int in_max, int out_min, int out_max)
-{
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-/******************************************************************************/
-/******************************************************************************/
-class pid
-{
-    public:
-	float kp;
-	float ki;
-	float kd;
-	float error;
-	float setpoint;
-	float input;
-	float output;
-	float Iterm;
-	float outMin;
-	float outMax;
-
-	void set_limits(float a,float b);
-	float compute(float in);
-};
-/******************************************************************************/
-
-/******************************************************************************/
-void pid::set_limits(float a,float b)
-{
-	if(a<b)
-	{
-		outMin = a;
-		outMax = b;
-	}
-	else
-	{
-		outMin = b;
-		outMax = a;
-	}
-}
-/******************************************************************************/
-
-/******************************************************************************/
-float pid::compute(float in)
-{
-	input = in;
-	error = setpoint - input;
-	Iterm += (ki*error);
-	if(Iterm> outMax) Iterm= outMax;
-      else if(Iterm< outMin) Iterm= outMin;
-      output = kp * error + Iterm;
-    if(output > outMax) output = outMax;
-    else if(output < outMin) output = outMin;
-    return output;
-}
-/******************************************************************************/
-/******************************************************************************/
-/******************************************************************************/
-union int2_tochar
-{
-    short int _int;
-    char _char[2];
-} info_x,info_y;
 
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
@@ -129,9 +56,6 @@ void show_xy_color(Mat img,int x,int y)
 
 int main()
 {
-#ifdef _RASPI_
-    device = serialOpen(dev2, baud_rate);
-#endif // _RASPI_
     VideoCapture cap;
     for(int i=0; i<2; i++)
     {
@@ -144,42 +68,32 @@ int main()
         cerr<<"Error opening the camera"<<endl;
         return -1;
     }
-
     cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
     cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
-//    cap.set(CV_CAP_PROP_FRAME_HEIGHT,640);
-//    cap.set(CV_CAP_PROP_FRAME_WIDTH,480);
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
         color[0] = 103;         ///Azul
-    pid pid_x,pid_y;
-    pid_x.kp = 0.09;
-    pid_x.ki = 0.03;
-    pid_x.set_limits(0.0,180.0);
-    pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    pid_x.output = 90;
-    pid_y.kp = 0.09;
-    pid_y.ki = 0.03;
-    pid_y.set_limits(0.0,180.0);
-    pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    pid_y.output = 110;
     //    cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);
 
     namedWindow("window",1);
+    createTrackbar("H","window", &FAIXA_H, 90);
+    createTrackbar("S","window", &FAIXA_S, 126);
+    createTrackbar("V","window", &FAIXA_V, 126);
     setMouseCallback("window", CallBackFunc, NULL);
 
-    Mat frame,aux_hsv,result;
+
+    Mat frame,aux_hsv,result,aux;
 
     vector<Mat> HSV_chanells;
 
     vector<vector<Point> > contours;
     vector<Point> approx;
 
-    bool obj_detected = false;
     for(;;)
     {
         cap >> frame;
-        GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
+//        GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
+        medianBlur(frame,frame,5);
         cvtColor(frame,aux_hsv,CV_BGR2HSV);
         aux_hsv.copyTo(image_HSV);
 
@@ -192,39 +106,15 @@ int main()
                                              Point( erosion_size, erosion_size ) );
         /// Apply the erosion operation
         //erode( result, result, element );
-        erode( frame, frame, element );
-        //dilate( frame, frame, element );
+//        erode( frame, frame, element );
+        dilate( frame, frame, element );
         #endif
         /********************************************************************************************************************************/
-
-        //Separa canais para verificar somente Matiz.
-        Mat aux(frame.size(), CV_8U);
-        split(aux_hsv,HSV_chanells);
-
-        threshold(HSV_chanells[0],HSV_chanells[0],min(179,(int)color[0]+FAIXA_H),255,THRESH_TOZERO_INV);
-        threshold(HSV_chanells[0],HSV_chanells[0],max(0,(int)color[0]-FAIXA_H),255,THRESH_TOZERO);
-        threshold(HSV_chanells[0],result,1,255,THRESH_BINARY);
-//        imshow("1",HSV_chanells[0]);
-        //result.copyTo(aux);
-
-//        threshold(HSV_chanells[1],HSV_chanells[1],min(255,(int)color[1]+FAIXA_S),255,THRESH_TOZERO_INV);
-//        threshold(HSV_chanells[1],HSV_chanells[1],max(0,(int)color[1]-FAIXA_S),255,THRESH_TOZERO);
-//        threshold(HSV_chanells[1],HSV_chanells[1],1,255,THRESH_BINARY);
-//        imshow("2",HSV_chanells[1]);
-//        //bitwise_not(HSV_chanells[1],HSV_chanells[1]);
-////
-//        threshold(HSV_chanells[2],HSV_chanells[2],100,255,THRESH_TOZERO_INV);
-//        threshold(HSV_chanells[2],HSV_chanells[2],20,255,THRESH_TOZERO);
-//        threshold(HSV_chanells[2],HSV_chanells[2],1,255,THRESH_BINARY);
-//        //bitwise_not(HSV_chanells[2],HSV_chanells[2]);
-//        imshow("3",HSV_chanells[2]);
-////
-//        bitwise_and(HSV_chanells[0],HSV_chanells[1],result);
-//        bitwise_and(result,HSV_chanells[2],result);
-
-        //Junta novamete os canais.
-        //merge(HSV_chanells,aux_hsv);
-        //cvtColor(aux_hsv,result,CV_HSV2BGR);
+//        threshold(HSV_chanells[0],HSV_chanells[0],min(179,(int)color[0]+FAIXA_H),255,THRESH_TOZERO_INV);
+//        threshold(HSV_chanells[0],HSV_chanells[0],max(0,(int)color[0]-FAIXA_H),255,THRESH_TOZERO);
+//        threshold(HSV_chanells[0],result,1,255,THRESH_BINARY);
+        inRange(aux_hsv,Scalar(color[0]-FAIXA_H,color[1]-FAIXA_S,color[2]-FAIXA_V),Scalar(color[0]+FAIXA_H,color[1]+FAIXA_S,color[2]+FAIXA_V),result);
+        result.copyTo(aux);
 
         //imshow("debug",HSV_chanells[2]);
         //MORPH_RECT, MORPH_CROSS, MORPH_ELLIPSE;
@@ -241,7 +131,7 @@ int main()
          ***********************************************************/
         int blob_index=0;
         int blob_area=0;
-        int area_min = 300;
+        int area_min = 200;
         /***********************************************************
          * Separa o maior blob para segmentação
         ***********************************************************/
@@ -267,34 +157,22 @@ int main()
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
         circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
 
-        float out_x = pid_x.compute(center.x);
-        float out_y = pid_y.compute(center.y);
-//        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
-        cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
-        int target_dist = _map(blob_area,300,3000,180,0);
-        #ifdef _RASPI_
-        serialPutchar(device,(unsigned char)200);
-        serialPutchar(device,(unsigned char)(int)out_x);
-        serialPutchar(device,(unsigned char)201);
-        serialPutchar(device,(unsigned char)(int)out_y);
-        serialPutchar(device,(unsigned char)202);
-        serialPutchar(device,(unsigned char)target_dist);
-        #endif // _RASPI_
+        cout <<"centro:("<< (int)center.x<<", "<<(int)center.y<<") / Area="<<blob_area<<endl;
         }
+
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
         circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
+
         if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
         else line(frame,center_screen,center,Scalar(0,0,255),2);
-        imshow("result",result);
+
+        imshow("result",aux);
         imshow( "window", frame );
 
         int key = waitKey(10);
         if(key==(int)'q')break;     ///Sair com letra q
 
     }
-#ifdef _RASPI_
-    serialClose (device);
-#endif
     destroyAllWindows();
     return 0;
 }
