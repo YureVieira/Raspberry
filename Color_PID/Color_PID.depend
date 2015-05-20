@@ -15,3 +15,11 @@
 	<opencv.hpp>
 	<wiringSerial.h>
 
+1432118409 source:/home/yure/Documentos/Raspberry/Color_PID/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+

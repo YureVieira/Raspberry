@@ -1,7 +1,8 @@
 
 #include <Servo.h>
-#define PIN_DEBUG A1
-ISR(TIM2_OVER_vect){}
+#define PIN_DEBUG A3
+ISR(TIM2_OVER_vect){
+}
 /*================================================================================*/
 enum direction {
   front,
@@ -152,15 +153,17 @@ void setup() {
   servo_x.write(90);
   servo_y.write(110);
   //Controlzador PID
-//  pid_rodas.kp = 1;
-//  pid_rodas.ki = 0.3;
-//  pid_rodas.set_limits(-255.0, 255.0);
-//  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
+  //  pid_rodas.kp = 1;
+  //  pid_rodas.ki = 0.3;
+  //  pid_rodas.set_limits(-255.0, 255.0);
+  //  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
 }
 
 byte _data=0;
 byte target_dist=0;
 boolean target=false;
+
+int pwm_debug;
 void loop() {
 
   if (Serial.available()) {
@@ -182,13 +185,23 @@ void loop() {
     }
   }
 
-  if (target)//Se passar um segundo, alinhar carro
+  if (digitalRead(PIN_DEBUG)==0)
   {
-    target_dist = map(target_dist,0,180,0,255);
-    carro.moveR(front,target_dist);
-    carro.moveL(front,255-target_dist);
+    int aux=0;
+    pwm_debug = map(aux,0,180,-255,255);
+    if(pwm_debug<0)
+    {
+      carro.moveR(back,pwm_debug);
+      carro.moveL(front,pwm_debug);
+    }
+    else
+    {
+      carro.moveR(front,pwm_debug);
+      carro.moveL(back,pwm_debug);
+    }
   }
   delay(10);
 
 }
+
 

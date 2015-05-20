@@ -10,9 +10,9 @@
 #include <wiringSerial.h>
 #endif // _RASPI_
 
-#define FAIXA_H 3
-#define FAIXA_S 25
-#define FAIXA_V 3
+int FAIXA_H =5;
+int FAIXA_S =25;
+int FAIXA_V =42;
 
 using namespace std;
 using namespace cv;
@@ -144,9 +144,11 @@ int main()
         cerr<<"Error opening the camera"<<endl;
         return -1;
     }
-
+    #ifdef _RASPI_
     cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
     cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
+    #endif // RASPI
+
 //    cap.set(CV_CAP_PROP_FRAME_HEIGHT,640);
 //    cap.set(CV_CAP_PROP_FRAME_WIDTH,480);
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
@@ -179,7 +181,8 @@ int main()
     for(;;)
     {
         cap >> frame;
-        GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
+//        GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
+        medianBlur(frame,frame,5);
         cvtColor(frame,aux_hsv,CV_BGR2HSV);
         aux_hsv.copyTo(image_HSV);
 
@@ -197,40 +200,9 @@ int main()
         #endif
         /********************************************************************************************************************************/
 
-        //Separa canais para verificar somente Matiz.
-        Mat aux(frame.size(), CV_8U);
-        split(aux_hsv,HSV_chanells);
-
-        threshold(HSV_chanells[0],HSV_chanells[0],min(179,(int)color[0]+FAIXA_H),255,THRESH_TOZERO_INV);
-        threshold(HSV_chanells[0],HSV_chanells[0],max(0,(int)color[0]-FAIXA_H),255,THRESH_TOZERO);
-        threshold(HSV_chanells[0],result,1,255,THRESH_BINARY);
-//        imshow("1",HSV_chanells[0]);
-        //result.copyTo(aux);
-
-//        threshold(HSV_chanells[1],HSV_chanells[1],min(255,(int)color[1]+FAIXA_S),255,THRESH_TOZERO_INV);
-//        threshold(HSV_chanells[1],HSV_chanells[1],max(0,(int)color[1]-FAIXA_S),255,THRESH_TOZERO);
-//        threshold(HSV_chanells[1],HSV_chanells[1],1,255,THRESH_BINARY);
-//        imshow("2",HSV_chanells[1]);
-//        //bitwise_not(HSV_chanells[1],HSV_chanells[1]);
-////
-//        threshold(HSV_chanells[2],HSV_chanells[2],100,255,THRESH_TOZERO_INV);
-//        threshold(HSV_chanells[2],HSV_chanells[2],20,255,THRESH_TOZERO);
-//        threshold(HSV_chanells[2],HSV_chanells[2],1,255,THRESH_BINARY);
-//        //bitwise_not(HSV_chanells[2],HSV_chanells[2]);
-//        imshow("3",HSV_chanells[2]);
-////
-//        bitwise_and(HSV_chanells[0],HSV_chanells[1],result);
-//        bitwise_and(result,HSV_chanells[2],result);
-
-        //Junta novamete os canais.
-        //merge(HSV_chanells,aux_hsv);
-        //cvtColor(aux_hsv,result,CV_HSV2BGR);
-
-        //imshow("debug",HSV_chanells[2]);
-        //MORPH_RECT, MORPH_CROSS, MORPH_ELLIPSE;
-        //show_xy_color(image_HSV,_x,_y);
-        //Mat img_canny(frame.size(), CV_8U);//nova matriz
-        //Canny(result, img_canny, v1, v2);
+        inRange(aux_hsv,Scalar(color[0]-FAIXA_H,color[1]-FAIXA_S,color[2]-FAIXA_V),Scalar(color[0]+FAIXA_H,color[1]+FAIXA_S,color[2]+FAIXA_V),result);
+        Mat aux;
+        result.copyTo(aux);
         findContours(result,contours,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
 //        if(contours.size()>0)
 //            cout<<contours.size()<<" blob encontrado"<<endl;
@@ -282,10 +254,12 @@ int main()
         #endif // _RASPI_
         }
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
-        circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
+//        circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
         if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
         else line(frame,center_screen,center,Scalar(0,0,255),2);
-        imshow("result",result);
+        #ifdef _RASPI_
+        imshow("result",aux);
+        #endif // _RASPI_
         imshow( "window", frame );
 
         int key = waitKey(10);

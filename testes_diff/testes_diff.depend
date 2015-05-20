@@ -6,3 +6,10 @@
 	<string.h>
 	<opencv.hpp>
 
+1432117217 source:/home/yure/Documentos/Raspberry/testes_diff/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+
