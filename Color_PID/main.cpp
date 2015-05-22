@@ -13,6 +13,9 @@
 int FAIXA_H =5;
 int FAIXA_S =25;
 int FAIXA_V =42;
+float p_x;
+float p_y;
+
 
 using namespace std;
 using namespace cv;
@@ -133,11 +136,7 @@ int main()
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
     VideoCapture cap;
-    for(int i=0; i<2; i++)
-    {
-        cap.open(i);
-        if (cap.isOpened()) break;
-    }
+    cap.open(0);
 
     if (!cap.isOpened())
     {
@@ -152,7 +151,7 @@ int main()
 //    cap.set(CV_CAP_PROP_FRAME_HEIGHT,640);
 //    cap.set(CV_CAP_PROP_FRAME_WIDTH,480);
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
-        color[0] = 103;         ///Azul
+    color[0] = 103;         ///Azul
     pid pid_x,pid_y;
     pid_x.kp = 0.09;
     pid_x.ki = 0.03;
@@ -164,6 +163,22 @@ int main()
     pid_y.set_limits(0.0,180.0);
     pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
     pid_y.output = 110;
+
+    /***********************************************************
+    *testes
+    ***********************************************************/
+    pid px,py;
+    px.kp = 0.1;
+    px.ki = 0.1;
+    px.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_WIDTH));
+    px.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
+    px.output = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
+    py.kp = 0.1;
+    py.ki = 0.1;
+    py.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+    py.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
+    py.input = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
+    /***********************************************************/
     //    cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);
 
@@ -228,8 +243,8 @@ int main()
 
         if(blob_area >= area_min)
         {
-            //cout << "Área: "<< blob_area <<endl;
-            approxPolyDP(contours[blob_index], approx, arcLength(Mat(contours[blob_index]), true)*0.02, true);
+        //cout << "Área: "<< blob_area <<endl;
+        approxPolyDP(contours[blob_index], approx, arcLength(Mat(contours[blob_index]), true)*0.02, true);
         /************************************************************
          * Extração do centro do blob
          ************************************************************/
@@ -237,13 +252,20 @@ int main()
         float radius;                                           ///Variavel auxiliar.
         minEnclosingCircle(approx,center,radius);           ///Acha o centro do blob.
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
-        circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
+        circle( frame, center, (int)radius, Scalar(255,0,0), 2);      ///Circulo que marca o blob.
+
+        px.setpoint = center.x;
+        py.setpoint = center.y;
+        p_x = px.compute(p_x);
+        p_y = py.compute(p_y);
+
 
         float out_x = pid_x.compute(center.x);
         float out_y = pid_y.compute(center.y);
 //        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
         cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
-        int target_dist = _map(blob_area,300,3000,180,0);
+//        int target_dist = _map(blob_area,300,3000,180,0);
+
         #ifdef _RASPI_
         serialPutchar(device,(unsigned char)200);
         serialPutchar(device,(unsigned char)(int)out_x);
@@ -255,11 +277,12 @@ int main()
         }
         circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
 //        circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
-        if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
-        else line(frame,center_screen,center,Scalar(0,0,255),2);
+//        if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
+//        else line(frame,center_screen,center,Scalar(0,0,255),2);
         #ifdef _RASPI_
         imshow("result",aux);
-        #endif // _RASPI_
+        #endif // _RASPI
+        circle(frame,Point((int)p_x,(int)p_y),5,Scalar(255,255,100),3,2);
         imshow( "window", frame );
 
         int key = waitKey(10);
