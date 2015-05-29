@@ -3,19 +3,25 @@
 #include <math.h>
 #include <string.h>
 #include <opencv.hpp>
-#define _RASPI_
+//#define _RASPI_
 //#define ERODE
+#define BLOB_AREA_MIN 2000
+#define BLOB_AREA_MAX 4000
 
 #ifdef _RASPI_
 #include <wiringSerial.h>
 #endif // _RASPI_
 
+/******************************************/
+float p_x;
+float p_y;
+float KP = 0.1;
+float KI = 0.1;
+/******************************************/
+
 int FAIXA_H =5;
 int FAIXA_S =25;
 int FAIXA_V =42;
-float p_x;
-float p_y;
-
 
 using namespace std;
 using namespace cv;
@@ -51,7 +57,6 @@ class pid
 	float Iterm;
 	float outMin;
 	float outMax;
-	float v_init;
 
 	void set_limits(float a,float b);
 	float compute(float in);
@@ -82,7 +87,7 @@ float pid::compute(float in)
 	Iterm += (ki*error);
 	if(Iterm> outMax) Iterm= outMax;
       else if(Iterm< outMin) Iterm= outMin;
-      output = kp * error + Iterm+v_init;
+      output = kp * error + Iterm;
     if(output > outMax) output = outMax;
     else if(output < outMin) output = outMin;
     return output;
@@ -137,7 +142,11 @@ int main()
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
     VideoCapture cap;
-    cap.open(0);
+    for(int i=0; i<2; i++)
+    {
+        cap.open(i);
+        if (cap.isOpened()) break;
+    }
 
     if (!cap.isOpened())
     {
@@ -152,34 +161,32 @@ int main()
 //    cap.set(CV_CAP_PROP_FRAME_HEIGHT,640);
 //    cap.set(CV_CAP_PROP_FRAME_WIDTH,480);
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
-    color[0] = 103;         ///Azul
+        color[0] = 103;         ///Azul
     pid pid_x,pid_y;
-    pid_x.kp = 0.07;
+    pid_x.kp = 0.09;
     pid_x.ki = 0.03;
     pid_x.set_limits(0.0,180.0);
     pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    pid_x.v_init = 90;
-    pid_y.kp = 0.07;
+    pid_x.output = 90;
+    pid_y.kp = 0.09;
     pid_y.ki = 0.03;
     pid_y.set_limits(0.0,180.0);
     pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    pid_y.v_init = 30;
-    cout<<"X(Kp="<<pid_x.kp<<", Ki="<<pid_x.ki<<")/   Y(Kp="<<pid_y.kp<<", Ki="<<pid_y.ki<<")"<<endl;
-    /***********************************************************
-    *testes
-    ***********************************************************/
-    pid px,py;
-    px.kp = 0.5;
-    px.ki = 0.1;
-    px.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_WIDTH));
-    px.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    px.v_init = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    py.kp = 0.5;
-    py.ki = 0.1;
-    py.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-    py.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    py.v_init = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    /***********************************************************/
+    pid_y.output = 110;
+        /***************************************************/
+    ///testes
+    pid target_x,target_y;
+    target_x.kp = KP;
+    target_x.ki = KI;
+    target_x.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_WIDTH));
+    target_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
+
+    target_y.kp = KP;
+    target_y.ki = KI;
+    target_y.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+    target_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
+    /***************************************************/
+
     //    cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);
 
@@ -194,10 +201,6 @@ int main()
     vector<Point> approx;
 
     bool obj_detected = false;
-    int key;
-
-    float out_x=pid_x.v_init;
-    float out_y=pid_y.v_init;
     for(;;)
     {
         cap >> frame;
@@ -248,8 +251,8 @@ int main()
 
         if(blob_area >= area_min)
         {
-        //cout << "Área: "<< blob_area <<endl;
-        approxPolyDP(contours[blob_index], approx, arcLength(Mat(contours[blob_index]), true)*0.02, true);
+            //cout << "Área: "<< blob_area <<endl;
+            approxPolyDP(contours[blob_index], approx, arcLength(Mat(contours[blob_index]), true)*0.02, true);
         /************************************************************
          * Extração do centro do blob
          ************************************************************/
@@ -257,59 +260,60 @@ int main()
         float radius;                                           ///Variavel auxiliar.
         minEnclosingCircle(approx,center,radius);           ///Acha o centro do blob.
         //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
-        circle( frame, center, (int)radius, Scalar(255,0,0), 2);      ///Circulo que marca o blob.
+//        circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
 
-        px.setpoint = center.x;
-        py.setpoint = center.y;
-        p_x = px.compute(p_x);
-        p_y = py.compute(p_y);
-
-        bool flag_pid = false;
-
-        if(flag_pid)
-        {
-            out_x = pid_x.compute(p_x);
-            out_y = pid_y.compute(p_y);
-        }
-        else
-        {
-            out_x = pid_x.compute(center.x);
-            out_y = pid_y.compute(center.y);
-        }
-
+        float out_x = pid_x.compute(center.x);
+        float out_y = pid_y.compute(center.y);
 //        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
-        cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
-//        int target_dist = _map(blob_area,300,3000,180,0);
+//        cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
+        cout<<blob_area<<endl;
+        /****************************************/
+        ///testes
+        target_x.setpoint = center.x;
+        target_y.setpoint = center.y;
+        p_x = target_x.compute(p_x);
+        p_y = target_y.compute(p_y);
 
+        if(p_x - center.x>0)circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(100,255,0),3,2);
+        else circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(0,255,100),3,2);
+
+        ///Sinaliza se esta perto ou longe do objeto
+        int target_dist = 0;
+        if(blob_area<BLOB_AREA_MIN)
+        {
+            circle(frame,Point((int)p_x,(int)p_y),2,Scalar(0,0,255),3);
+            target_dist = 1;///Chegar perto
+        }
+        else if(blob_area>BLOB_AREA_MIN && blob_area<BLOB_AREA_MAX)
+        {
+            circle(frame,Point((int)p_x,(int)p_y),2,Scalar(0,255,255),3);
+            target_dist = 0;///Ficar onde esta
+        }
+        if(blob_area>BLOB_AREA_MAX)
+        {
+            circle(frame,Point((int)p_x,(int)p_y),2,Scalar(255,0,0),3);
+            target_dist = 2;///Afastar-se
+        }
+        /****************************************/
         #ifdef _RASPI_
         serialPutchar(device,(unsigned char)200);
         serialPutchar(device,(unsigned char)(int)out_x);
         serialPutchar(device,(unsigned char)201);
         serialPutchar(device,(unsigned char)(int)out_y);
-//        serialPutchar(device,(unsigned char)202);
-//        serialPutchar(device,(unsigned char)target_dist);
+        serialPutchar(device,(unsigned char)202);
+        serialPutchar(device,(unsigned char)target_dist);
         #endif // _RASPI_
         }
-        else
-        {
-            px.setpoint = center_screen.x;
-            py.setpoint = center_screen.y;
-            p_x = px.compute(p_x);
-            p_y = py.compute(p_y);
-        }
-
+//        circle(frame,center_screen,5,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
 //        circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
 //        if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
 //        else line(frame,center_screen,center,Scalar(0,0,255),2);
         #ifdef _RASPI_
-        //imshow("result",aux);
-        #endif // _RASPI
-        circle(frame,center_screen,1,Scalar(10,255,50),3,2);        ///Circulo qua marca o centro.
-        circle(frame,Point((int)p_x,(int)p_y),5,Scalar(255,255,100),3,2);///circulo que busca o blob
+        imshow("result",aux);
+        #endif // _RASPI_
         imshow( "window", frame );
 
         int key = waitKey(10);
-
         if(key==(int)'q')break;     ///Sair com letra q
 
     }

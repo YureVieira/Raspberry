@@ -7,7 +7,7 @@
 	<opencv.hpp>
 	<wiringSerial.h>
 
-1432297959 source:/home/pi/Raspberry/Color_PID/main.cpp
+1431002807 source:/home/pi/Raspberry/Color_PID/main.cpp
 	<iostream>
 	<sstream>
 	<math.h>
@@ -15,7 +15,23 @@
 	<opencv.hpp>
 	<wiringSerial.h>
 
-1432292235 source:/home/yure/Documentos/Raspberry/Color_PID/main.cpp
+1432118409 source:/home/yure/Documentos/Raspberry/Color_PID/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+
+1432909103 source:/home/micro/Documentos/Raspberry/Color_PID/main.cpp
+	<iostream>
+	<sstream>
+	<math.h>
+	<string.h>
+	<opencv.hpp>
+	<wiringSerial.h>
+
+1432912576 source:/home/micro/Documentos/Color_PID/main.cpp
 	<iostream>
 	<sstream>
 	<math.h>
