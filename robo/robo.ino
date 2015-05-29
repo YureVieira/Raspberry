@@ -19,7 +19,7 @@ class car {
   int pwm_b;
 public:
   void set_pins(int a, int b, int pa, int pb);
-  void move(direction dir, int pwm);
+  void move(direction dir, int pwmR ,int pwmL);
   void moveR(direction dir, int pwm);
   void moveL(direction dir, int pwm);
 };
@@ -33,30 +33,30 @@ void car::set_pins(int a, int b, int pa, int pb) {
   pinMode(pin_b, OUTPUT);
 }
 /*================================================================================*/
-void car::move(direction dir, int pwm = 0) {
+void car::move(direction dir, int pwmR = 0,int pwmL=0) {
   if (dir == right) {
     digitalWrite(pin_a, 0);
     digitalWrite(pin_b, 1);
-    analogWrite(pwm_a, pwm);
-    analogWrite(pwm_b, 255 - pwm);
+    analogWrite(pwm_a, pwmR);
+    analogWrite(pwm_b, 255- pwmL);
   }
   else if (dir == left) {
     digitalWrite(pin_a, 1);
     digitalWrite(pin_b, 0);
-    analogWrite(pwm_a, 255 - pwm);
-    analogWrite(pwm_b, pwm);
+    analogWrite(pwm_a, 255 - pwmR);
+    analogWrite(pwm_b, pwmL);
   }
   else if (dir == front) {
     digitalWrite(pin_a, 1);
     digitalWrite(pin_b, 1);
-    analogWrite(pwm_a, 255 - pwm);
-    analogWrite(pwm_b, 255 - pwm);
+    analogWrite(pwm_a, 255 - pwmR);
+    analogWrite(pwm_b, 255 - pwmL);
   }
   else if (dir == back) {
     digitalWrite(pin_a, 0);
     digitalWrite(pin_b, 0);
-    analogWrite(pwm_b, pwm);
-    analogWrite(pwm_a, pwm);
+    analogWrite(pwm_b, pwmR);
+    analogWrite(pwm_a, pwmL);
   }
   else if (dir == stop) {
     digitalWrite(pin_a, 0);
@@ -187,21 +187,18 @@ void loop() {
 
   if (digitalRead(PIN_DEBUG)==0)
   {
-    int aux=0;
-    pwm_debug = map(aux,0,180,-255,255);
-    if(pwm_debug<0)
+    if(target)
+    if(target_dist == 1)
     {
-      carro.moveR(back,pwm_debug);
-      carro.moveL(front,pwm_debug);
+      carro.move(front,255,255);//Aproximar
     }
-    else
-    {
-      carro.moveR(front,pwm_debug);
-      carro.moveL(back,pwm_debug);
-    }
+    if(target_dist == 2)
+  {
+    carro.move(back,255,255);//Afastar
+  }
   }
   delay(10);
-
 }
+
 
 
