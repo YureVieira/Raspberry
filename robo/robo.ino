@@ -172,6 +172,7 @@ void loop() {
     if (_data == 200)fnc = 1;                     //Seleçao para servox
     if (_data == 201)fnc = 2;              //Seleçao para servoy
     if (_data == 202)fnc = 3;
+    if (_data == 203)fnc = 4;
     if (_data <= 180)                                  //Alinha a camera
     {
       if (fnc == 1)
@@ -182,23 +183,32 @@ void loop() {
         target_dist = _data;
         target = true;
       }
+      if(fnc == 4)
+      {
+        target = false;
+      }
     }
   }
 
   if (digitalRead(PIN_DEBUG)==0)
   {
     if(target)
-    if(target_dist == 1)
-    {
-      carro.move(front,255,255);//Aproximar
-    }
+      if(target_dist == 1)
+      {
+        carro.move(front,255,255);//Aproximar
+      }
     if(target_dist == 2)
-  {
-    carro.move(back,255,255);//Afastar
-  }
+    {
+      carro.move(back,255,255);//Afastar
+    }
+    if(target_dist == 0)
+    {
+      carro.move(stop,0,0);
+    }
   }
   delay(10);
 }
+
 
 
 
