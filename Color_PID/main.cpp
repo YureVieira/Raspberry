@@ -2,8 +2,8 @@
 #include <sstream>
 #include <math.h>
 #include <string.h>
-#include <opencv.hpp>
-//#define _RASPI_
+#include <opencv2/opencv.hpp>
+#define _RASPI_
 //#define ERODE
 #define BLOB_AREA_MIN 2000
 #define BLOB_AREA_MAX 4000
