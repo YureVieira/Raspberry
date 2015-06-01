@@ -269,29 +269,29 @@ int main()
         cout<<blob_area<<endl;
         /****************************************/
         ///testes
-        target_x.setpoint = center.x;
-        target_y.setpoint = center.y;
-        p_x = target_x.compute(p_x);
-        p_y = target_y.compute(p_y);
+        //target_x.setpoint = center.x;
+        //target_y.setpoint = center.y;
+        //p_x = target_x.compute(p_x);
+        //p_y = target_y.compute(p_y);
 
-        if(p_x - center.x>0)circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(100,255,0),3,2);
-        else circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(0,255,100),3,2);
+        //if(p_x - center.x>0)circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(100,255,0),3,2);
+        //else circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(0,255,100),3,2);
 
         ///Sinaliza se esta perto ou longe do objeto
         int target_dist = 0;
         if(blob_area<BLOB_AREA_MIN)
         {
-            circle(frame,Point((int)p_x,(int)p_y),2,Scalar(0,0,255),3);
+            circle(frame,center,2,Scalar(0,0,255),3);
             target_dist = 1;///Chegar perto
         }
         else if(blob_area>BLOB_AREA_MIN && blob_area<BLOB_AREA_MAX)
         {
-            circle(frame,Point((int)p_x,(int)p_y),2,Scalar(0,255,255),3);
+            circle(frame,center,2,Scalar(0,255,255),3);
             target_dist = 0;///Ficar onde esta
         }
         if(blob_area>BLOB_AREA_MAX)
         {
-            circle(frame,Point((int)p_x,(int)p_y),2,Scalar(255,0,0),3);
+            circle(frame,center,2,Scalar(255,0,0),3);
             target_dist = 2;///Afastar-se
         }
         /****************************************/

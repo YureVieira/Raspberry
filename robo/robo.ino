@@ -1,8 +1,6 @@
 
 #include <Servo.h>
 #define PIN_DEBUG A3
-ISR(TIM2_OVER_vect){
-}
 /*================================================================================*/
 enum direction {
   front,
@@ -221,6 +219,7 @@ void loop() {
       }
     }
   }
+  else carro.move(stop,0,0);
   delay(10);
 }
 
