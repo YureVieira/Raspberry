@@ -102,6 +102,7 @@ public:
   float Iterm;
   float outMin;
   float outMax;
+  float init;
 
   void set_limits(float a, float b);
   float compute(float in);
@@ -132,7 +133,7 @@ float pid::compute(float in)
   Iterm += (ki * error);
   if (Iterm > outMax) Iterm = outMax;
   else if (Iterm < outMin) Iterm = outMin;
-  output = kp * error + Iterm;
+  output = kp * error + Iterm + init;
   if (output > outMax) output = outMax;
   else if (output < outMin) output = outMin;
   return output;
@@ -157,6 +158,7 @@ void setup() {
   //  pid_rodas.ki = 0.3;
   //  pid_rodas.set_limits(-255.0, 255.0);
   //  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
+  //  pid_rodas.init = 0.0
 }
 
 byte _data=0;
@@ -164,6 +166,7 @@ byte target_dist=0;
 boolean target=false;
 
 int pwm_debug;
+int servo_error;
 void loop() {
 
   if (Serial.available()) {
@@ -190,24 +193,38 @@ void loop() {
     }
   }
 
-  if (digitalRead(PIN_DEBUG)==0)
+  if (digitalRead(PIN_DEBUG)==0)//Debud
   {
-    if(target)
+    //Ajustar cada roda
+    int error_R=0,error_L=0;
+    servo_error = 90 - servo_x.read();//Erro do servo
+    if(servo_error>0)
+    {
+      error_R = map(servo_error,0,90,0,255); 
+    }
+    if(servo_error<0)
+    {
+      error_L = map(servo_error,0,-90,0,255); 
+    }
+    if(target){
       if(target_dist == 1)
       {
-        carro.move(front,255,255);//Aproximar
+        carro.move(front,255-error_R,255-error_L);//Aproximar
       }
-    if(target_dist == 2)
-    {
-      carro.move(back,255,255);//Afastar
-    }
-    if(target_dist == 0)
-    {
-      carro.move(stop,0,0);
+      if(target_dist == 2)
+      {
+        carro.move(back,255-error_R,255-error_L);//Afastar
+      }
+      if(target_dist == 0)
+      {
+        carro.move(stop,0,0);
+      }
     }
   }
   delay(10);
 }
+
+
 
 
 

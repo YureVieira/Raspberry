@@ -57,7 +57,7 @@ class pid
 	float Iterm;
 	float outMin;
 	float outMax;
-
+	float init;
 	void set_limits(float a,float b);
 	float compute(float in);
 };
@@ -87,7 +87,7 @@ float pid::compute(float in)
 	Iterm += (ki*error);
 	if(Iterm> outMax) Iterm= outMax;
       else if(Iterm< outMin) Iterm= outMin;
-      output = kp * error + Iterm;
+      output = kp * error + Iterm + init;
     if(output > outMax) output = outMax;
     else if(output < outMin) output = outMin;
     return output;
@@ -167,12 +167,12 @@ int main()
     pid_x.ki = 0.03;
     pid_x.set_limits(0.0,180.0);
     pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    pid_x.output = 90;
+    pid_x.init = 90;
     pid_y.kp = 0.09;
     pid_y.ki = 0.03;
     pid_y.set_limits(0.0,180.0);
     pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    pid_y.output = 110;
+    pid_y.init = 110;
         /***************************************************/
     ///testes
     pid target_x,target_y;
