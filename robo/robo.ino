@@ -1,4 +1,10 @@
-
+/*********************************************************************************
+*Debug
+**********************************************************************************/
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
+/*********************************************************************************/
 #include <Servo.h>
 #define PIN_DEBUG A3
 /*================================================================================*/
@@ -156,7 +162,10 @@ void setup() {
   //  pid_rodas.ki = 0.3;
   //  pid_rodas.set_limits(-255.0, 255.0);
   //  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
-  //  pid_rodas.init = 0.0
+  //  pid_rodas.init = 0.0;
+  lcd.begin (16,2);
+  lcd.setBacklight(HIGH);
+  lcd.print("Sistema pronto");
 }
 
 byte _data=0;
@@ -191,11 +200,18 @@ void loop() {
     }
   }
 
-  if (digitalRead(PIN_DEBUG)==0)//Debud
+  if (digitalRead(PIN_DEBUG)==1)//Debud
   {
     //Ajustar cada roda
     int error_R=0,error_L=0;
     servo_error = 90 - servo_x.read();//Erro do servo
+    /********************************/
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Erro: ");
+    //lcd.setCursor(0,1);
+    lcd.print(servo_error);
+    /********************************/    
     if(servo_error>0)
     {
       error_R = map(servo_error,0,90,0,255); 
