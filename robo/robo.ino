@@ -175,7 +175,7 @@ boolean target=false;
 int pwm_debug;
 int servo_error;
 void loop() {
-
+  
   if (Serial.available()) {
     _data = Serial.read();
 
