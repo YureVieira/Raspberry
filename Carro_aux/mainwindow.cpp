@@ -9,11 +9,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    serialPort.setPortName("COM5");         //Nome da porta
+    serialPort.setPortName("COM3");         //Nome da porta
     serialPort.setBaudRate(9600);           //Baud rate
 
     //Tentar abrir para escrita somente
-    if (!serialPort.open(QIODevice::WriteOnly)) {
+    if (!serialPort.open(QIODevice::ReadWrite)) {
         cout<<"Deu ruim"<<endl;
         close();
     }

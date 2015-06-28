@@ -3,7 +3,7 @@
 **********************************************************************************/
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 /*********************************************************************************/
 #include <Servo.h>
 #define PIN_DEBUG A3
@@ -17,15 +17,15 @@ enum direction {
 };
 /*================================================================================*/
 class car {
-  int pin_a;
-  int pin_b;
-  int pwm_a;
-  int pwm_b;
-public:
-  void set_pins(int a, int b, int pa, int pb);
-  void move(direction dir, int pwmR ,int pwmL);
-  void moveR(direction dir, int pwm);
-  void moveL(direction dir, int pwm);
+    int pin_a;
+    int pin_b;
+    int pwm_a;
+    int pwm_b;
+  public:
+    void set_pins(int a, int b, int pa, int pb);
+    void move(direction dir, int pwmR , int pwmL);
+    void moveR(direction dir, int pwm);
+    void moveL(direction dir, int pwm);
 };
 
 void car::set_pins(int a, int b, int pa, int pb) {
@@ -37,12 +37,12 @@ void car::set_pins(int a, int b, int pa, int pb) {
   pinMode(pin_b, OUTPUT);
 }
 /*================================================================================*/
-void car::move(direction dir, int pwmR = 0,int pwmL=0) {
+void car::move(direction dir, int pwmR = 0, int pwmL = 0) {
   if (dir == right) {
     digitalWrite(pin_a, 0);
     digitalWrite(pin_b, 1);
     analogWrite(pwm_a, pwmR);
-    analogWrite(pwm_b, 255- pwmL);
+    analogWrite(pwm_b, 255 - pwmL);
   }
   else if (dir == left) {
     digitalWrite(pin_a, 1);
@@ -75,7 +75,7 @@ void car::moveR(direction dir, int pwm)
     digitalWrite(pin_a, 0);
     analogWrite(pwm_a, pwm);
   }
-  if (dir == back){
+  if (dir == back) {
     digitalWrite(pin_a, 1);
     analogWrite(pwm_a, 255 - pwm);
   }
@@ -95,21 +95,21 @@ void car::moveL(direction dir, int pwm)
 /******************************************************************************/
 class pid
 {
-public:
-  float kp;
-  float ki;
-  float kd;
-  float error;
-  float setpoint;
-  float input;
-  float output;
-  float Iterm;
-  float outMin;
-  float outMax;
-  float init;
+  public:
+    float kp;
+    float ki;
+    float kd;
+    float error;
+    float setpoint;
+    float input;
+    float output;
+    float Iterm;
+    float outMin;
+    float outMax;
+    float init;
 
-  void set_limits(float a, float b);
-  float compute(float in);
+    void set_limits(float a, float b);
+    float compute(float in);
 };
 /******************************************************************************/
 
@@ -151,7 +151,7 @@ pid pid_rodas;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(PIN_DEBUG,INPUT_PULLUP);
+  pinMode(PIN_DEBUG, INPUT_PULLUP);
   carro.set_pins(2, 3, 5, 6);
   servo_x.attach(10);
   servo_y.attach(11);
@@ -163,19 +163,19 @@ void setup() {
   //  pid_rodas.set_limits(-255.0, 255.0);
   //  pid_rodas.setpoint = 90.0;          //Setpoint  a posiço inicial do eixo x.
   //  pid_rodas.init = 0.0;
-  lcd.begin (16,2);
+  lcd.begin (16, 2);
   lcd.setBacklight(HIGH);
   lcd.print("Sistema pronto");
 }
 
-byte _data=0;
-byte target_dist=0;
-boolean target=false;
+byte _data = 0;
+byte target_dist = 0;
+boolean target = false;
 
 int pwm_debug;
 int servo_error;
 void loop() {
-  
+
   if (Serial.available()) {
     _data = Serial.read();
 
@@ -186,56 +186,73 @@ void loop() {
     if (_data <= 180)                                  //Alinha a camera
     {
       if (fnc == 1)
+      {
         servo_x.write(_data);
+      }
       if (fnc == 2)
+      {
         servo_y.write(140 - _data);
-      if(fnc == 3){
+      }
+      if (fnc == 3) {
         target_dist = _data;
         target = true;
       }
-      if(fnc == 4)
+      if (fnc == 4)
       {
         target = false;
       }
     }
   }
 
-  if (digitalRead(PIN_DEBUG)==1)//Debud
+  if (digitalRead(PIN_DEBUG) == 1) //Debud
   {
     //Ajustar cada roda
-    int error_R=0,error_L=0;
+    int error_R = 0, error_L = 0;
     servo_error = 90 - servo_x.read();//Erro do servo
-    /********************************/
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Erro: ");
-    //lcd.setCursor(0,1);
-    lcd.print(servo_error);
-    /********************************/    
-    if(servo_error>0)
+
+    if (servo_error > 0)
     {
-      error_R = map(servo_error,0,90,0,255); 
+      error_R = map(servo_error, 0, 90, 0, 255);
     }
-    if(servo_error<0)
+    if (servo_error < 0)
     {
-      error_L = map(servo_error,0,-90,0,255); 
+      error_L = map(servo_error, 0, -90, 0, 255);
     }
-    if(target){
-      if(target_dist == 1)
+
+    if (target) {
+      if (target_dist == 1)
       {
-        carro.move(front,255-error_R,255-error_L);//Aproximar
+        carro.move(front, 255 - error_R, 255 - error_L); //Aproximar
+        /********************************/
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("R: ");
+        lcd.print(255 - error_R);
+        lcd.setCursor(0,1);
+        lcd.print("L: ");
+        lcd.print(255 - error_L);
+        /********************************/
       }
-      if(target_dist == 2)
+      if (target_dist == 2)
       {
-        carro.move(back,255-error_R,255-error_L);//Afastar
+        carro.move(back, 255 - error_L, 255 - error_R); //Afastar
+        /********************************/
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("R: ");
+        lcd.print(255 - error_R);
+        lcd.setCursor(0,1);
+        lcd.print("L: ");
+        lcd.print(255 - error_L);
+        /********************************/
       }
-      if(target_dist == 0)
+      if (target_dist == 0)
       {
-        carro.move(stop,0,0);
+        carro.move(stop, 0, 0);
       }
     }
   }
-  else carro.move(stop,0,0);
+  else carro.move(stop, 0, 0);
   delay(10);
 }
 
