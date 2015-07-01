@@ -12,6 +12,15 @@
 #include <wiringSerial.h>
 #endif // _RASPI_
 
+using namespace std;
+using namespace cv;
+
+/******************************************/
+const int baud_rate = 9600;
+int device;
+char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyAMA0";
+/******************************************/
+
 /******************************************/
 float p_x;
 float p_y;
@@ -19,31 +28,24 @@ float KP = 0.1;
 float KI = 0.1;
 /******************************************/
 
+/******************************************/
 int FAIXA_H =5;
 int FAIXA_S =25;
 int FAIXA_V =42;
+/******************************************/
 
-using namespace std;
-using namespace cv;
-
+/******************************************/
 Mat image_HSV;
 int _x,_y;
 int v1=20,v2=90,N=11;
 Vec3b color;
 Point center_screen;
 Point2f center;                                     ///Variavel que recebe o centro do blob.
-short int error_x,error_y;
 
-const int baud_rate = 9600;
-int device;
-char dev1[]="/dev/ttyUSB0",dev2[]="/dev/ttyAMA0";
+/******************************************/
+
 /******************************************************************************/
-int _map(int x, int in_min, int in_max, int out_min, int out_max)
-{
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-/******************************************************************************/
-/******************************************************************************/
+
 class pid
 {
     public:
@@ -61,9 +63,7 @@ class pid
 	void set_limits(float a,float b);
 	float compute(float in);
 };
-/******************************************************************************/
 
-/******************************************************************************/
 void pid::set_limits(float a,float b)
 {
 	if(a<b)
@@ -77,9 +77,7 @@ void pid::set_limits(float a,float b)
 		outMax = a;
 	}
 }
-/******************************************************************************/
 
-/******************************************************************************/
 float pid::compute(float in)
 {
 	input = in;
@@ -93,8 +91,11 @@ float pid::compute(float in)
     return output;
 }
 /******************************************************************************/
-/******************************************************************************/
-/******************************************************************************/
+int _map(int x, int in_min, int in_max, int out_min, int out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 union int2_tochar
 {
     short int _int;
@@ -127,6 +128,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
         _y=y;
     }
 }
+
 void show_xy_color(Mat img,int x,int y)
 {
     Vec3b color = img.at<Vec3b>(Point(x,y));
@@ -135,34 +137,15 @@ void show_xy_color(Mat img,int x,int y)
     //imshow("Color",M);
     cout << "color_HSV: [" << (int)color[0]<< ","<< (int)color[1]<< ","<< (int)color[2]<<"]" << endl;
 }
-
+/******************************************************************************/
 int main()
 {
+
 #ifdef _RASPI_
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
-    VideoCapture cap;
-    for(int i=0; i<2; i++)
-    {
-        cap.open(i);
-        if (cap.isOpened()) break;
-    }
 
-    if (!cap.isOpened())
-    {
-        cerr<<"Error opening the camera"<<endl;
-        return -1;
-    }
-    #ifdef _RASPI_
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
-    cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
-    #endif // RASPI
-
-//    cap.set(CV_CAP_PROP_FRAME_HEIGHT,640);
-//    cap.set(CV_CAP_PROP_FRAME_WIDTH,480);
-    center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
-        color[0] = 103;         ///Azul
-    pid pid_x,pid_y;
+	pid pid_x,pid_y;
     pid_x.kp = 0.09;
     pid_x.ki = 0.03;
     pid_x.set_limits(0.0,180.0);
@@ -173,43 +156,48 @@ int main()
     pid_y.set_limits(0.0,180.0);
     pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
     pid_y.init = 110;
-        /***************************************************/
-    ///testes
-    pid target_x,target_y;
-    target_x.kp = KP;
-    target_x.ki = KI;
-    target_x.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_WIDTH));
-    target_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
 
-    target_y.kp = KP;
-    target_y.ki = KI;
-    target_y.set_limits(0.0,(float)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-    target_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    /***************************************************/
+    VideoCapture cap;
+    cap.open();
+    if (!cap.isOpened())
+    {
+        cerr<<"Error opening the camera"<<endl;
+        return -1;
+    }
+    
+	#ifdef _RASPI_
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
+    #endif // RASPI
 
-    //    cap.set(CV_CAP_PROP_GAIN, 48);
+
+    center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,
+    cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
+
+    color[0] = 103;         ///Azul
+
+//	  cap.set(CV_CAP_PROP_GAIN, 48);
 //    cap.set(CV_CAP_PROP_BRIGHTNESS, 10);
+
+    Mat frame,aux_hsv,result;
+    vector<Mat> HSV_chanells;
+    vector<vector<Point> > contours;
+    vector<Point> approx;
+    bool obj_detected = false;
 
     namedWindow("window",1);
     setMouseCallback("window", CallBackFunc, NULL);
-
-    Mat frame,aux_hsv,result;
-
-    vector<Mat> HSV_chanells;
-
-    vector<vector<Point> > contours;
-    vector<Point> approx;
-
-    bool obj_detected = false;
     for(;;)
     {
         cap >> frame;
-//        GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
+//      GaussianBlur(frame, frame, Size(5, 5), 2, 1 );//aplique um filtro
         medianBlur(frame,frame,5);
         cvtColor(frame,aux_hsv,CV_BGR2HSV);
         aux_hsv.copyTo(image_HSV);
 
-        /********************************************************************************************************************************/
+        /*****************************************************
+		*Erosão(opcional)
+		******************************************************/
         #ifdef ERODE
         ///Erosão
         int erosion_size = 3;
@@ -221,24 +209,25 @@ int main()
         erode( frame, frame, element );
         //dilate( frame, frame, element );
         #endif
-        /********************************************************************************************************************************/
+        
+		/*****************************************************
+		*Busca por cor
+		******************************************************/
+        inRange(aux_hsv,Scalar(color[0]-FAIXA_H,color[1]-FAIXA_S,
+			color[2]-FAIXA_V),Scalar(color[0]+FAIXA_H,
+			color[1]+FAIXA_S,color[2]+FAIXA_V),result);
 
-        inRange(aux_hsv,Scalar(color[0]-FAIXA_H,color[1]-FAIXA_S,color[2]-FAIXA_V),Scalar(color[0]+FAIXA_H,color[1]+FAIXA_S,color[2]+FAIXA_V),result);
-        Mat aux;
-        result.copyTo(aux);
         findContours(result,contours,CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
-//        if(contours.size()>0)
-//            cout<<contours.size()<<" blob encontrado"<<endl;
 
-        //            count_frames_without_blob=0;
         /************************************************************
          * Segmentação dos blobs
          ***********************************************************/
         int blob_index=0;
         int blob_area=0;
         int area_min = 300;
+
         /***********************************************************
-         * Separa o maior blob para segmentação
+        * Separa o maior blob para segmentação
         ***********************************************************/
         for( size_t i = 0; i < contours.size() ; i++ )
         {
@@ -248,41 +237,32 @@ int main()
                 blob_index = i;
             }
         }
-
         if(blob_area >= area_min)
         {
-            //cout << "Área: "<< blob_area <<endl;
-            approxPolyDP(contours[blob_index], approx, arcLength(Mat(contours[blob_index]), true)*0.02, true);
+            approxPolyDP(contours[blob_index], approx, 
+				arcLength(Mat(contours[blob_index]), true)*0.02, true);
+
         /************************************************************
-         * Extração do centro do blob
-         ************************************************************/
-        //Point2f center;                                     ///Variavel que recebe o centro do blob.
+        * Extração do centro do blob
+        ************************************************************/
         float radius;                                           ///Variavel auxiliar.
         minEnclosingCircle(approx,center,radius);           ///Acha o centro do blob.
-        //circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
+//        circle( result, center, (int)radius, 255/*cv::Scalar(255,200,100)*/, 1);
 //        circle( frame, center, (int)radius, cv::Scalar(255,0,0), 2);      ///Circulo que marca o blob.
 
+		/*****************************************************
+		* Calculo de correção PID para o carro
+		******************************************************/
         float out_x = pid_x.compute(center.x);
         float out_y = pid_y.compute(center.y);
-//        cout<<"setpoint: "<< (int)pid_x.setpoint <<" / Input: "<<(int)pid_x.input<<" / Erro: "<<(int)pid_x.error<<" / Saida: "<<(int)out_x<<endl;
-//        cout <<(int)(unsigned char)(int)out_x<<"   "<<(int)(unsigned char)(int)out_y<<endl;
         cout<<blob_area<<endl;
-        /****************************************/
-        ///testes
-        //target_x.setpoint = center.x;
-        //target_y.setpoint = center.y;
-        //p_x = target_x.compute(p_x);
-        //p_y = target_y.compute(p_y);
-
-        //if(p_x - center.x>0)circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(100,255,0),3,2);
-        //else circle(frame,Point((int)p_x,(int)p_y),(int)radius,Scalar(0,255,100),3,2);
 
         ///Sinaliza se esta perto ou longe do objeto
         int target_dist = 0;
         if(blob_area<BLOB_AREA_MIN)
         {
             circle(frame,center,2,Scalar(0,0,255),3);
-            target_dist = 1;///Chegar perto
+            target_dist = 1;///Aproximar
         }
         else if(blob_area>BLOB_AREA_MIN && blob_area<BLOB_AREA_MAX)
         {
@@ -292,7 +272,7 @@ int main()
         if(blob_area>BLOB_AREA_MAX)
         {
             circle(frame,center,2,Scalar(255,0,0),3);
-            target_dist = 2;///Afastar-se
+            target_dist = 2;///Afastar
         }
         /****************************************/
         #ifdef _RASPI_
@@ -308,7 +288,11 @@ int main()
 //        circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
 //        if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
 //        else line(frame,center_screen,center,Scalar(0,0,255),2);
-        #ifdef _RASPI_
+		
+		/*****************************************************
+		* EXibição das imagens
+		******************************************************/
+		#ifndef __RASPI_
         imshow("result",aux);
         #endif // _RASPI_
         imshow( "window", frame );

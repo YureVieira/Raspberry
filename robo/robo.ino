@@ -193,7 +193,8 @@ void loop() {
       {
         servo_y.write(140 - _data);
       }
-      if (fnc == 3) {
+      if (fnc == 3) 
+      {
         target_dist = _data;
         target = true;
       }
