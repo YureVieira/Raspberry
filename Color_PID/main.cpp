@@ -41,7 +41,7 @@ int v1=20,v2=90,N=11;
 Vec3b color;
 Point center_screen;
 Point2f center;                                     ///Variavel que recebe o centro do blob.
-
+int locked_target = 0;
 /******************************************/
 
 /******************************************************************************/
@@ -288,11 +288,24 @@ int main()
 //        circle(frame,Point(_x,_y),1,Scalar(100,255,50),3,2);        ///Circulo que marca o ponto clicado.
 //        if(center.x >center_screen.x)line(frame,center_screen,center,Scalar(0,255,0),2);
 //        else line(frame,center_screen,center,Scalar(0,0,255),2);
-		
+
+
+#ifdef _RASPI_
+        /*****************************************************
+        * Sem detecção de blobs
+        ******************************************************/
+        locked_target -= 1;
+        if(locked_target==0)
+        {
+           serialPutchar(device,(unsigned char)203);
+        }
+        if(locked_target<0)locked_target=0;
+#endif // _RASPI_
 		/*****************************************************
-		* EXibição das imagens
+                * Exibição das imagens
 		******************************************************/
-		#ifndef __RASPI_
+
+#ifndef __RASPI_
         imshow("result",aux);
         #endif // _RASPI_
         imshow( "window", frame );
