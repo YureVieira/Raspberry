@@ -80,12 +80,12 @@ void pid::set_limits(float a,float b)
 
 float pid::compute(float in)
 {
-	input = in;
-	error = setpoint - input;
-	Iterm += (ki*error);
-	if(Iterm> outMax) Iterm= outMax;
-      else if(Iterm< outMin) Iterm= outMin;
-      output = kp * error + Iterm + init;
+    input = in;
+    error = setpoint - input;
+    Iterm += (ki*error);
+    if(Iterm> outMax) Iterm= outMax;
+    else if(Iterm< outMin) Iterm= outMin;
+    output = kp * error + Iterm + init;
     if(output > outMax) output = outMax;
     else if(output < outMin) output = outMin;
     return output;
@@ -145,7 +145,7 @@ int main()
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
 
-	pid pid_x,pid_y;
+    pid pid_x,pid_y;
     pid_x.kp = 0.09;
     pid_x.ki = 0.03;
     pid_x.set_limits(0.0,180.0);
@@ -165,7 +165,7 @@ int main()
         return -1;
     }
     
-	#ifdef _RASPI_
+    #ifdef _RASPI_
     cap.set(CV_CAP_PROP_FRAME_HEIGHT,320);
     cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
     #endif // RASPI
@@ -253,6 +253,8 @@ int main()
 		/*****************************************************
 		* Calculo de correção PID para o carro
 		******************************************************/
+	locked_target +=2;
+	if(locked_target>=20)locked_target=20
         float out_x = pid_x.compute(center.x);
         float out_y = pid_y.compute(center.y);
         cout<<blob_area<<endl;
