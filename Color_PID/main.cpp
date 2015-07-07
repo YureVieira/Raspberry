@@ -145,18 +145,6 @@ int main()
     device = serialOpen(dev2, baud_rate);
 #endif // _RASPI_
 
-    pid pid_x,pid_y;
-    pid_x.kp = 0.09;
-    pid_x.ki = 0.03;
-    pid_x.set_limits(0.0,180.0);
-    pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
-    pid_x.init = 90;
-    pid_y.kp = 0.09;
-    pid_y.ki = 0.03;
-    pid_y.set_limits(0.0,180.0);
-    pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
-    pid_y.init = 110;
-
     VideoCapture cap;
     cap.open();
     if (!cap.isOpened())
@@ -170,6 +158,17 @@ int main()
     cap.set(CV_CAP_PROP_FRAME_WIDTH,240);
     #endif // RASPI
 
+    pid pid_x,pid_y;
+    pid_x.kp = 0.09;
+    pid_x.ki = 0.03;
+    pid_x.set_limits(0.0,180.0);
+    pid_x.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_WIDTH)/2;
+    pid_x.init = 90;
+    pid_y.kp = 0.09;
+    pid_y.ki = 0.03;
+    pid_y.set_limits(0.0,180.0);
+    pid_y.setpoint = (float)cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2;
+    pid_y.init = 110;
 
     center_screen = Point(cap.get(CV_CAP_PROP_FRAME_WIDTH)/2,
     cap.get(CV_CAP_PROP_FRAME_HEIGHT)/2);
@@ -254,7 +253,7 @@ int main()
 		* Calculo de correção PID para o carro
 		******************************************************/
 	locked_target +=2;
-	if(locked_target>=20)locked_target=20
+	if(locked_target>=20)locked_target=20;
         float out_x = pid_x.compute(center.x);
         float out_y = pid_y.compute(center.y);
         cout<<blob_area<<endl;
@@ -308,7 +307,7 @@ int main()
 		******************************************************/
 
 #ifndef __RASPI_
-        imshow("result",aux);
+        //imshow("result",aux);
         #endif // _RASPI_
         imshow( "window", frame );
 
